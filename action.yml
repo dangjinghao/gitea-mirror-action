@@ -58,10 +58,9 @@ runs:
   using: "composite"
   steps:
     - name: Clone upstream repository
-      uses: actions/checkout@v6
-      with:
-        repository: dangjinghao/gitea-github-mirror
-        path: .gitea-mirror-upstream
+      shell: bash
+      run: |
+        git clone https://github.com/dangjinghao/gitea-github-mirror .gitea-mirror-upstream
 
     - name: Create configuration file
       shell: bash
