@@ -65,4 +65,4 @@ runs:
         DRY_RUN: ${{ inputs.mirror-dry-run }}
         DEBUG: ${{ inputs.mirror-debug }}
       run: |
-        python3 ./gitea-mirror-action.py
+        python3 ${{ github.action_path }}/gitea-mirror-action.py
