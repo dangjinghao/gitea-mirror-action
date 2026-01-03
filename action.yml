@@ -19,9 +19,6 @@ inputs:
   mirror-gitea-org:
     description: "Gitea organization where mirrors will be created"
     required: true
-  mirror-gitea-user:
-    description: "Gitea user that owns the API token"
-    required: true
   mirror-gitea-token:
     description: "Gitea API token with write permissions"
     required: true
@@ -33,22 +30,18 @@ inputs:
     description: 'Filter mode: "include" or "exclude"'
     required: false
     default: "exclude"
-  mirror-include-repos:
-    description: "Space-separated list of repos to include (only used if filter-mode=include)"
+  mirror-filter-repo-list:
+    description: "comma-separated list of repos to include/exclude based on filter mode"
     required: false
     default: ""
-  mirror-exclude-repos:
-    description: "Space-separated list of repos to exclude (only used if filter-mode=exclude)"
-    required: false
-    default: ""
-  mirror-mirror-interval:
+  mirror-interval:
     description: "Mirror sync interval (e.g. 8h, 60m)"
     required: false
     default: "8h"
   mirror-debug:
     description: "Enable debug mode (true/false)"
     required: false
-    default: "true"
+    default: "false"
   mirror-dry-run:
     description: "Enable dry-run mode without making changes (true/false)"
     required: false
@@ -57,38 +50,19 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Clone upstream repository
-      shell: bash
-      run: |
-        git clone https://github.com/dangjinghao/gitea-github-mirror .gitea-mirror-upstream
-
-    - name: Create configuration file
-      shell: bash
-      run: |
-        cat > .gitea-mirror-upstream/gitea-github-mirror.conf << 'EOF'
-        GITHUB_OWNER="${{ inputs.mirror-github-owner }}"
-        GITHUB_TOKEN="${{ inputs.mirror-github-token }}"
-        GITEA_ORG="${{ inputs.mirror-gitea-org }}"
-        GITEA_URL="${{ inputs.mirror-gitea-url }}"
-        GITEA_USER="${{ inputs.mirror-gitea-user }}"
-        GITEA_TOKEN="${{ inputs.mirror-gitea-token }}"
-        CLONE_WIKI=${{ inputs.mirror-clone-wiki }}
-        FILTER_MODE="${{ inputs.mirror-filter-mode }}"
-        INCLUDE_REPOS=(${{ inputs.mirror-include-repos }})
-        EXCLUDE_REPOS=(${{ inputs.mirror-exclude-repos }})
-        MIRROR_INTERVAL="${{ inputs.mirror-mirror-interval }}"
-        DRY_RUN=${{ inputs.mirror-dry-run }}
-        DEBUG=${{ inputs.mirror-debug }}
-        EOF
-
     - name: Run mirror script
       shell: bash
-      working-directory: .gitea-mirror-upstream
+      env:
+        GITHUB_OWNER: ${{ inputs.mirror-github-owner }}
+        GITHUB_TOKEN: ${{ inputs.mirror-github-token }}
+        GITEA_ORG: ${{ inputs.mirror-gitea-org }}
+        GITEA_URL: ${{ inputs.mirror-gitea-url }}
+        GITEA_TOKEN: ${{ inputs.mirror-gitea-token }}
+        CLONE_WIKI: ${{ inputs.mirror-clone-wiki }}
+        FILTER_MODE: ${{ inputs.mirror-filter-mode }}
+        FILTER_REPO_LIST: ${{ inputs.mirror-filter-repo-list }}
+        MIRROR_INTERVAL: ${{ inputs.mirror-interval }}
+        DRY_RUN: ${{ inputs.mirror-dry-run }}
+        DEBUG: ${{ inputs.mirror-debug }}
       run: |
-        chmod +x ./gitea-github-mirror.sh
-        bash ./gitea-github-mirror.sh
-
-    - name: Cleanup upstream directory
-      shell: bash
-      if: always()
-      run: rm -rf .gitea-mirror-upstream
+        python3 ./gitea-mirror-action.py
