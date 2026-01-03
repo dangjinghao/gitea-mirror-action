@@ -145,7 +145,7 @@ def migrate_to_gitea(repo_name: str, clone_url: str):
     """
     if DRY_RUN:
         dry_log(
-            f"Would migrate '{clone_url}' to {GITEA_URL}/{GITEA_ORG}/{repo_name}'")
+            f"Would mirror '{clone_url}' to {GITEA_URL}/{GITEA_ORG}/{repo_name}'")
         return
     gitea_migrate_api = f"{GITEA_URL}/api/v1/repos/migrate"
     headers = {
@@ -168,12 +168,12 @@ def migrate_to_gitea(repo_name: str, clone_url: str):
     try:
         with request.urlopen(req) as response:
             if response.status == 201:
-                log(f"Repository '{repo_name}' migrated to Gitea.")
+                log(f"Repository '{repo_name}' mirrored to Gitea.")
             else:
                 error_log(
-                    f"Failed to migrate repository '{repo_name}'. Status: {response.status}")
+                    f"Failed to mirror repository '{repo_name}'. Status: {response.status}")
     except Exception as e:
-        error_log(f"Error migrating repository '{repo_name}': {e}")
+        error_log(f"Error occured when mirroring repository '{repo_name}': {e}")
 
 
 def main():
@@ -205,7 +205,7 @@ def main():
             continue
         migrate_to_gitea(repo_name, clone_url)
 
-    log("Migration completed.")
+    log("Mirror completed.")
 
 
 if __name__ == "__main__":
