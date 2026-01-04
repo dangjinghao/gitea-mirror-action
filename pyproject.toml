@@ -1,0 +1,9 @@
+[project]
+name = "gitea-mirror-action"
+version = "2.0.0"
+description = "Mirror GitHub repositories to Gitea using Gitea Actions."
+readme = "readme.md"
+requires-python = ">=3.13"
+dependencies = [
+    "httpx>=0.28.1",
+]

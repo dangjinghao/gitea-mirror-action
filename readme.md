@@ -1,6 +1,6 @@
 # GITEA-MIRROR-ACTION
 
-A Gitea Action to mirror GitHub repositories to Gitea.
+A Gitea Action to mirror GitHub repositories to Gitea.**Only public repositories is supported, private repositories clone is under developing.**
 
 ## Usage
 
@@ -31,12 +31,12 @@ jobs:
       - uses: dangjinghao/gitea-mirror-action@v2
         with:
           mirror-github-owner: dangjinghao
-          mirror-github-token: ${{ secrets.MIRROR_GITHUB_TOKEN }}
-          mirror-gitea-url: ${{ vars.MIRROR_GITEA_URL }}
-          mirror-gitea-org: ${{ vars.MIRROR_GITEA_ORG }}
-          mirror-gitea-token: ${{ secrets.MIRROR_GITEA_TOKEN }}
           mirror-clone-wiki: "true"
           mirror-filter-repo-list: ${{ vars.MIRROR_EXCLUDE_REPOS }}
+          mirror-github-token: ${{ secrets.MIRROR_GITHUB_TOKEN }}
+          mirror-gitea-url: ${{ vars.MIRROR_GITEA_URL }}
+          mirror-gitea-token: ${{ secrets.MIRROR_GITEA_TOKEN }}
+          mirror-gitea-org: ${{ vars.MIRROR_GITEA_ORG }}
 
   github-mirror-myorg:
     runs-on: ubuntu-latest
