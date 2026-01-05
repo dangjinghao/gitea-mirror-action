@@ -7,62 +7,103 @@ branding:
   color: "green"
 
 inputs:
-  mirror-github-owner:
-    description: "GitHub owner (username or organization)"
-    required: true
-  mirror-github-token:
-    description: "GitHub personal access token with repo read access"
-    required: true
-  mirror-gitea-url:
-    description: "URL to your Gitea instance (e.g. https://git.example.com)"
-    required: true
-  mirror-gitea-org:
-    description: "Gitea organization where mirrors will be created"
-    required: true
-  mirror-gitea-token:
-    description: "Gitea API token with write permissions"
-    required: true
-  mirror-clone-wiki:
-    description: "Whether to clone wiki (true/false)"
+  # debug and dry-run args
+  debug:
+    description: "Enable debug mode (true/false)"
     required: false
     default: "false"
-  mirror-filter-mode:
-    description: 'Filter mode: "include" or "exclude"'
+  dry-run:
+    description: "Enable dry-run mode without making changes (true/false)"
     required: false
-    default: "exclude"
-  mirror-filter-repo-list:
-    description: "comma-separated list of repos to include/exclude based on filter mode"
-    required: false
-    default: ""
+    default: "false"
+  # mode selection args
+  fetch-from-pat:
+    description: "Fetch repositories using personal access tokens or not"
+    required: true
+  # general args
+  github-token:
+    description: "GitHub personal access token"
+    required: true
+  gitea-url:
+    description: "URL to your Gitea instance (e.g. https://git.example.com)"
+    required: true
+  gitea-token:
+    description: "Gitea API token with write permissions"
+    required: true
   mirror-interval:
     description: "Mirror sync interval (e.g. 8h, 60m)"
     required: false
     default: "8h"
-  mirror-debug:
-    description: "Enable debug mode (true/false)"
+  clone-wiki:
+    description: "Whether to clone wiki (true/false)"
     required: false
     default: "false"
-  mirror-dry-run:
-    description: "Enable dry-run mode without making changes (true/false)"
+  filter-mode:
+    description: 'Filter mode: "include" or "exclude"'
     required: false
-    default: "false"
+    default: "exclude"
+  # public repo mirror args
+  github-owner:
+    description: "GitHub owner (username or organization)"
+    required: false
+  gitea-org:
+    description: "Gitea organization where mirrors will be created"
+    required: false
+  filter-repo-list:
+    description: "comma-separated list of repos to include/exclude based on filter mode"
+    required: false
+  # pat repo mirror args
+  filter-shell-patterns:
+    description: "Comma-separated list of shell patterns to filter repository names (default: '*'), supports wildcards. E.g., 'owner1/*,owner2/repo2'"
+    required: false
+    default: "*"
+  org-map:
+    description: "Comma-separated list of GitHub org to Gitea org mappings. E.g., 'github_org1:gitea_org1,github_org2:gitea_org2,*:default_gitea_org'"
+    required: false
+    default: ""
 
 runs:
   using: "composite"
   steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.13"
+
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v7
+
+    - name: Install action dependencies
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      run: |
+        set -euo pipefail
+        uv sync --no-dev
+        uv pip install .
+
     - name: Run mirror script
       shell: bash
+      working-directory: ${{ github.action_path }}
       env:
-        GITHUB_OWNER: ${{ inputs.mirror-github-owner }}
-        GITHUB_TOKEN: ${{ inputs.mirror-github-token }}
-        GITEA_ORG: ${{ inputs.mirror-gitea-org }}
-        GITEA_URL: ${{ inputs.mirror-gitea-url }}
-        GITEA_TOKEN: ${{ inputs.mirror-gitea-token }}
-        CLONE_WIKI: ${{ inputs.mirror-clone-wiki }}
-        FILTER_MODE: ${{ inputs.mirror-filter-mode }}
-        FILTER_REPO_LIST: ${{ inputs.mirror-filter-repo-list }}
+        # debug and dry-run args
+        DEBUG: ${{ inputs.debug }}
+        DRY_RUN: ${{ inputs.dry-run }}
+        # mode selection args
+        FETCH_FROM_PAT: ${{ inputs.fetch-from-pat }}
+        # general args
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        GITEA_URL: ${{ inputs.gitea-url }}
+        GITEA_TOKEN: ${{ inputs.gitea-token }}
         MIRROR_INTERVAL: ${{ inputs.mirror-interval }}
-        DRY_RUN: ${{ inputs.mirror-dry-run }}
-        DEBUG: ${{ inputs.mirror-debug }}
+        CLONE_WIKI: ${{ inputs.clone-wiki }}
+        FILTER_MODE: ${{ inputs.filter-mode }}
+        # public repo mirror args
+        GITHUB_OWNER: ${{ inputs.github-owner }}
+        GITEA_ORG: ${{ inputs.gitea-org }}
+        FILTER_REPO_LIST: ${{ inputs.filter-repo-list }}
+        # pat repo mirror args
+        FILTER_SHELL_PATTERNS: ${{ inputs.filter-shell-patterns }}
+        ORG_MAP: ${{ inputs.org-map }}
       run: |
-        python3 ${{ github.action_path }}/gitea-mirror-action.py
+        set -euo pipefail
+        uv run python -m gitea_mirror

@@ -1,10 +1,11 @@
 import os
 import logging
-from mirror_repo import PublicRepoMirror, PATRepoMirror
+
+from gitea_mirror.mirror_repo import PublicRepoMirror, PATRepoMirror
 
 
 def pat_repo_mirror_main(GITHUB_TOKEN, GITEA_URL,
-                         GITEA_TOKEN, DRY_RUN):
+                         GITEA_TOKEN, DRY_RUN, MIRROR_INTERVAL, CLONE_WIKI, FILTER_MODE):
     """specific envs:
     ORG_MAP: Comma-separated list of GitHub org to Gitea org mappings. E.g., "github_org1:gitea_org1,github_org2:gitea_org2,*:default_gitea_org"
     MIRROR_INTERVAL: Gitea mirror interval (default: "8h")
@@ -23,9 +24,7 @@ def pat_repo_mirror_main(GITHUB_TOKEN, GITEA_URL,
                 raise ValueError(
                     "Invalid ORG_MAP format. Each mapping must be in the format 'github_org:gitea_org'.")
             org_map[github_org.strip()] = gitea_org.strip()
-    MIRROR_INTERVAL = os.getenv("MIRROR_INTERVAL", "8h")
-    CLONE_WIKI = os.getenv("CLONE_WIKI", "true").lower() == "true"
-    FILTER_MODE = os.getenv("FILTER_MODE", "exclude")
+
     FILTER_SHELL_PATTERNS_ENV = os.getenv("FILTER_SHELL_PATTERNS", "*")
     FILTER_SHELL_PATTERNS = [
         pattern.strip() for pattern in FILTER_SHELL_PATTERNS_ENV.split(",")]
@@ -40,7 +39,7 @@ def pat_repo_mirror_main(GITHUB_TOKEN, GITEA_URL,
 
 
 def public_repo_mirror_main(GITHUB_TOKEN, GITEA_TOKEN,
-                            GITEA_URL, DRY_RUN):
+                            GITEA_URL, DRY_RUN, MIRROR_INTERVAL, CLONE_WIKI, FILTER_MODE):
     mirror = PublicRepoMirror(GITHUB_TOKEN, GITEA_TOKEN,
                               GITEA_URL, DRY_RUN)
     GITHUB_OWNER = os.getenv("GITHUB_OWNER", "")
@@ -49,9 +48,7 @@ def public_repo_mirror_main(GITHUB_TOKEN, GITEA_TOKEN,
     GITEA_ORG = os.getenv("GITEA_ORG", "")
     if GITEA_ORG == "":
         raise ValueError("TARGET_ORG environment variable is not set.")
-    MIRROR_INTERVAL = os.getenv("MIRROR_INTERVAL", "8h")
-    CLONE_WIKI = os.getenv("CLONE_WIKI", "true").lower() == "true"
-    FILTER_MODE = os.getenv("FILTER_MODE", "exclude")
+
     FILTER_REPO_LIST_ENV = os.getenv("FILTER_REPO_LIST", "")
     FILTER_REPO_LIST = []
     if FILTER_REPO_LIST_ENV != "":
@@ -85,6 +82,10 @@ def main():
     if GITHUB_TOKEN == "":
         raise ValueError("GITHUB_TOKEN environment variable is not set.")
 
+    MIRROR_INTERVAL = os.getenv("MIRROR_INTERVAL", "8h")
+    CLONE_WIKI = os.getenv("CLONE_WIKI", "true").lower() == "true"
+    FILTER_MODE = os.getenv("FILTER_MODE", "exclude")
+
     DEBUG_MODE = os.getenv("DEBUG", "false").lower() == "true"
 
     if DEBUG_MODE:
@@ -97,10 +98,10 @@ def main():
 
     if FETCH_FROM_PAT:
         pat_repo_mirror_main(GITHUB_TOKEN, GITEA_URL,
-                             GITEA_TOKEN, DRY_RUN)
+                             GITEA_TOKEN, DRY_RUN, MIRROR_INTERVAL, CLONE_WIKI, FILTER_MODE)
     else:
         public_repo_mirror_main(GITHUB_TOKEN, GITEA_TOKEN,
-                                GITEA_URL, DRY_RUN)
+                                GITEA_URL, DRY_RUN, MIRROR_INTERVAL, CLONE_WIKI, FILTER_MODE)
 
 
 if __name__ == "__main__":
