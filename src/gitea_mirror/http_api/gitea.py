@@ -8,6 +8,7 @@ class Gitea:
     headers: dict[str, str]
 
     def __init__(self, url: str, token: str):
+        url = url.rstrip("/")
         self.url = url
         self.token = token
         self.headers = {
@@ -62,20 +63,6 @@ class Gitea:
             self.create_org(org)
         else:
             response.raise_for_status()
-
-    def check_repo_exists(self, owner: str, repo_name: str) -> bool:
-        """
-        Check if a repository exists in the specified Gitea organization.
-        """
-        gitea_repo_api = f"{self.url}/api/v1/repos/{owner}/{repo_name}"
-        response = httpx.get(gitea_repo_api, headers=self.headers)
-        if response.status_code == 200:
-            return True
-        elif response.status_code == 404:
-            return False
-        else:
-            response.raise_for_status()
-            return False
 
     def migrate_from_github(self, to_org: str, repo_name: str, clone_url: str, github_token: str, mirror_interval: str = "8h", clone_wiki: bool = True, private: bool = False):
         """

@@ -11,7 +11,7 @@ class PATRepo:
         self.private = private
 
     def __str__(self) -> str:
-        return f"PATRepo({self.full_name}, {self.private})"
+        return f"PATRepo({self.full_name}, {'private' if self.private else 'public'})"
 
     def __repr__(self) -> str:
         return self.__str__()
@@ -45,7 +45,7 @@ class GitHub:
         repos = []
         page = 1
         per_page = 100
-        url = f"{self._BASE_URL}/repos/{owner}/repos"
+        url = f"{self._BASE_URL}/users/{owner}/repos"
 
         while True:
             params = {
