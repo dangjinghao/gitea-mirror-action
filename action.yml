@@ -85,6 +85,7 @@ runs:
       shell: bash
       working-directory: ${{ github.action_path }}
       env:
+        PYTHONUNBUFFERED: "1"
         # debug and dry-run args
         DEBUG: ${{ inputs.debug }}
         DRY_RUN: ${{ inputs.dry-run }}

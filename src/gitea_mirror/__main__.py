@@ -1,7 +1,19 @@
 import os
 import logging
+import sys
+import contextlib
 
 from gitea_mirror.mirror_repo import PublicRepoMirror, PATRepoMirror
+
+
+@contextlib.contextmanager
+def actions_group(title: str):
+    """Group logs in Actions UIs (GitHub/Gitea) using workflow commands."""
+    print(f"::group::{title}", flush=True)
+    try:
+        yield
+    finally:
+        print("::endgroup::", flush=True)
 
 
 def pat_repo_mirror_main(GITHUB_TOKEN, GITEA_URL,
@@ -89,19 +101,35 @@ def main():
     DEBUG_MODE = os.getenv("DEBUG", "false").lower() == "true"
 
     if DEBUG_MODE:
-        logging.basicConfig(level=logging.DEBUG)
+        logging.basicConfig(level=logging.DEBUG, stream=sys.stdout, force=True)
     else:
-        logging.basicConfig(level=logging.INFO)
+        logging.basicConfig(level=logging.INFO, stream=sys.stdout, force=True)
 
     for noisy_logger in ("httpx", "httpcore"):
         logging.getLogger(noisy_logger).setLevel(logging.CRITICAL)
-
+    
     if FETCH_FROM_PAT:
-        pat_repo_mirror_main(GITHUB_TOKEN, GITEA_URL,
-                             GITEA_TOKEN, DRY_RUN, MIRROR_INTERVAL, CLONE_WIKI, FILTER_MODE)
+        with actions_group("Mirror repositories (PAT mode)"):
+            pat_repo_mirror_main(
+                GITHUB_TOKEN,
+                GITEA_URL,
+                GITEA_TOKEN,
+                DRY_RUN,
+                MIRROR_INTERVAL,
+                CLONE_WIKI,
+                FILTER_MODE,
+            )
     else:
-        public_repo_mirror_main(GITHUB_TOKEN, GITEA_TOKEN,
-                                GITEA_URL, DRY_RUN, MIRROR_INTERVAL, CLONE_WIKI, FILTER_MODE)
+        with actions_group("Mirror repositories (public mode)"):
+            public_repo_mirror_main(
+                GITHUB_TOKEN,
+                GITEA_TOKEN,
+                GITEA_URL,
+                DRY_RUN,
+                MIRROR_INTERVAL,
+                CLONE_WIKI,
+                FILTER_MODE,
+            )
 
 
 if __name__ == "__main__":
