@@ -9,11 +9,11 @@ from gitea_mirror.mirror_repo import PublicRepoMirror, PATRepoMirror
 @contextlib.contextmanager
 def actions_group(title: str):
     """Group logs in Actions UIs (GitHub/Gitea) using workflow commands."""
-    print(f"::group::{title}", flush=True)
+    print(f"::group::{title}")
     try:
         yield
     finally:
-        print("::endgroup::", flush=True)
+        print("::endgroup::")
 
 
 def pat_repo_mirror_main(GITHUB_TOKEN, GITEA_URL,
@@ -101,9 +101,9 @@ def main():
     DEBUG_MODE = os.getenv("DEBUG", "false").lower() == "true"
 
     if DEBUG_MODE:
-        logging.basicConfig(level=logging.DEBUG, stream=sys.stdout, force=True)
+        logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
     else:
-        logging.basicConfig(level=logging.INFO, stream=sys.stdout, force=True)
+        logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 
     for noisy_logger in ("httpx", "httpcore"):
         logging.getLogger(noisy_logger).setLevel(logging.CRITICAL)
