@@ -1,1 +1,3 @@
 /.vscode
+*.pyc
+/src/gitea_mirror_action.egg-info

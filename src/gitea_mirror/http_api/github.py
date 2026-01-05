@@ -10,6 +10,12 @@ class PATRepo:
         self.full_name = full_name
         self.private = private
 
+    def __str__(self) -> str:
+        return f"PATRepo({self.full_name}, {self.private})"
+
+    def __repr__(self) -> str:
+        return self.__str__()
+
 
 class GitHub:
     _BASE_URL = "https://api.github.com"

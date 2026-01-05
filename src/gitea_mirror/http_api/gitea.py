@@ -15,9 +15,9 @@ class Gitea:
             "Content-Type": "application/json"
         }
 
-    def get_org_repos(self, org: str) -> list[str]:
+    def list_org_repos(self, org: str) -> list[str]:
         """
-        Get list of repositories in the specified Gitea organization.
+        Get list of repository full names in the specified Gitea organization.
         """
         repos = []
         page = 1
@@ -32,11 +32,23 @@ class Gitea:
             data = response.json()
             if len(data) == 0:
                 break
-            repos.extend(data)
+            repos.extend([repo["full_name"] for repo in data])
             if len(data) < per_page:
                 break
             page += 1
         return repos
+
+    def create_org(self, org: str):
+        """
+        Create a Gitea organization.
+        """
+        gitea_org_api = f"{self.url}/api/v1/orgs"
+        data = {
+            "username": org,
+            "visibility": "public"
+        }
+        response = httpx.post(gitea_org_api, headers=self.headers, json=data)
+        response.raise_for_status()
 
     def ensure_org_exists(self, org: str):
         """
@@ -45,11 +57,25 @@ class Gitea:
         gitea_org_api = f"{self.url}/api/v1/orgs/{org}"
         response = httpx.get(gitea_org_api, headers=self.headers)
         if response.status_code == 200:
+            return
+        elif response.status_code == 404:
+            self.create_org(org)
+        else:
+            response.raise_for_status()
+
+    def check_repo_exists(self, owner: str, repo_name: str) -> bool:
+        """
+        Check if a repository exists in the specified Gitea organization.
+        """
+        gitea_repo_api = f"{self.url}/api/v1/repos/{owner}/{repo_name}"
+        response = httpx.get(gitea_repo_api, headers=self.headers)
+        if response.status_code == 200:
             return True
         elif response.status_code == 404:
             return False
         else:
             response.raise_for_status()
+            return False
 
     def migrate_from_github(self, to_org: str, repo_name: str, clone_url: str, github_token: str, mirror_interval: str = "8h", clone_wiki: bool = True, private: bool = False):
         """
